@@ -1,6 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function Note() {
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+  const [notes, setNotes] = useState([]);
+  const [editId, setEditId] = useState(null);
+
+  const addNote = () => {
+    if (title && note) {
+      if (editId) {
+        setNotes(
+          notes.map((n) => (n.id === editId ? { ...n, title, note } : n))
+        );
+        setEditId(null);
+      } else {
+        setNotes([...notes, { id: Date.now(), title, note }]);
+        setTitle("");
+        setNote("");
+      }
+    }
+  };
+
+  const editNote = (n) => {
+    setTitle(n.title);
+    setNote(n.note);
+    setEditId(n.id);
+  };
+
+  const deleteNote = (id) => {
+    setNotes(notes.filter((n) => n.id !== id));
+  };
+
   return (
     <div className="container ">
       <div className="font-audiowide text-2xl py-5 font-bold">Note App</div>
@@ -10,34 +40,61 @@ export default function Note() {
           type="text"
           placeholder="Add Title"
           className="border  text-center"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
-        <input
-          type="text"
+        <textarea
           placeholder="Add Note"
-          className="border text-center h-40"
+          className="border text-center h-20"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
         />
-        <div className="py-3 flex justify-center gap-3">
-          <button className="border rounded w-32 bg-black text-white">
-            Add note
+        <div className="pb-3">
+          <button
+            className="border rounded w-32 bg-black text-white"
+            onClick={addNote}
+          >
+            {editId ? "Update" : "Add note"}
           </button>
-          <button className="border w-32 rounded bg-black text-white">
-            Save
-          </button>
+
+          {editId && (
+            <button
+              className="border rounded w-32 bg-black text-white"
+              onClick={() => {
+                setEditId(null);
+                setTitle("");
+                setNote("");
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="border h-52 flex flex-col justify-between p-4">
-        <div className="font-bold">Title</div>
-        <div>Note</div>
-        <div className="flex justify-center gap-3">
-          <button className="border w-32 rounded bg-black text-white">
-            Edit
-          </button>
-          <button className="border w-32 rounded bg-black text-white">
-            Delete
-          </button>
+      {notes.map((n) => (
+        <div
+          key={n.id}
+          className="border h-52 flex flex-col justify-between p-4"
+        >
+          <div className="font-bold">{n.title}</div>
+          <div>{n.note}</div>
+          <div className="flex justify-center gap-3">
+            <button
+              className="border w-32 rounded bg-black text-white"
+              onClick={() => editNote(n)}
+            >
+              Edit
+            </button>
+            <button
+              className="border w-32 rounded bg-black text-white"
+              onClick={() => deleteNote(n.id)}
+            >
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
