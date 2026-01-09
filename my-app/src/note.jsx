@@ -35,7 +35,7 @@ export default function Note() {
     <div className="container ">
       <div className="font-audiowide text-2xl py-5 font-bold">Note App</div>
 
-      <div className="flex flex-col justify-center gap-3">
+      <div className="flex flex-col justify-center gap-3 font-schoolbell">
         <input
           type="text"
           placeholder="Add Title"
@@ -75,7 +75,7 @@ export default function Note() {
       {notes.map((n) => (
         <div
           key={n.id}
-          className="border h-52 flex flex-col justify-between p-4"
+          className="border h-52 flex flex-col justify-between p-4 font-schoolbell"
         >
           <div className="font-bold">{n.title}</div>
           <div>{n.note}</div>
