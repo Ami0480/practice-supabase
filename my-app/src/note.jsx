@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "./supabase-client";
 
 export default function Note() {
   const [title, setTitle] = useState("");
@@ -6,27 +7,54 @@ export default function Note() {
   const [notes, setNotes] = useState([]);
   const [editId, setEditId] = useState(null);
 
-  const addNote = () => {
-    if (title && note) {
-      if (editId) {
-        setNotes(
-          notes.map((n) => (n.id === editId ? { ...n, title, note } : n))
-        );
-        setEditId(null);
-      } else {
-        setNotes([...notes, { id: Date.now(), title, note }]);
-        setTitle("");
-        setNote("");
-      }
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  const fetchNotes = async () => {
+    const { data, error } = await supabase
+      .from("notes")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching:", error.message);
+    } else {
+      setNotes(data || []);
     }
   };
 
-  const editNote = (n) => {
-    setTitle(n.title);
-    setNote(n.note);
-    setEditId(n.id);
+  const addNote = async () => {
+    if (!title || !note) return;
+
+    if (editId) {
+      const { error } = await supabase
+        .from("notes")
+        .update({ title, note })
+        .eq("id", editId);
+    }
+    if (error) {
+      console.error("Error updating:", error.message);
+    }
+    setEditId(null);
+  }else{
+     const { error } = await supabase
+     .from("notes")
+     .insert({ title, note });
+
+
+     if(error){
+        console.error("Error adding:",error.message);
+    }
+}
+
+      setTitle("");
+      setNote("");
+      fetchNotes();
+     
   };
 
+ 
   const deleteNote = (id) => {
     setNotes(notes.filter((n) => n.id !== id));
   };
@@ -35,7 +63,7 @@ export default function Note() {
     <div className="container ">
       <div className="font-audiowide text-2xl py-5 font-bold">Note App</div>
 
-      <div className="flex flex-col justify-center gap-3 font-schoolbell">
+      <form className="flex flex-col justify-center gap-3 font-schoolbell">
         <input
           type="text"
           placeholder="Add Title"
@@ -70,7 +98,7 @@ export default function Note() {
             </button>
           )}
         </div>
-      </div>
+      </form>
 
       {notes.map((n) => (
         <div
