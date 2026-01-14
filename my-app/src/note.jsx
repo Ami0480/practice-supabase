@@ -68,7 +68,7 @@ export default function Note() {
 
   return (
     <div className="container ">
-      <div className="font-audiowide text-2xl py-5 font-bold">Note App</div>
+      <div className="font-audiowide text-4xl py-5 font-bold">Note App</div>
 
       <form className="flex flex-col justify-center gap-3 font-schoolbell">
         <input
