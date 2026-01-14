@@ -32,31 +32,38 @@ export default function Note() {
         .from("notes")
         .update({ title, note })
         .eq("id", editId);
-    }
-    if (error) {
-      console.error("Error updating:", error.message);
-    }
-    setEditId(null);
-  }else{
-     const { error } = await supabase
-     .from("notes")
-     .insert({ title, note });
 
+      if (error) {
+        console.error("Error updating:", error.message);
+      }
+      setEditId(null);
+    } else {
+      const { error } = await supabase.from("notes").insert({ title, note });
 
-     if(error){
-        console.error("Error adding:",error.message);
+      if (error) {
+        console.error("Error adding:", error.message);
+      }
     }
-}
 
-      setTitle("");
-      setNote("");
-      fetchNotes();
-     
+    setTitle("");
+    setNote("");
+    fetchNotes();
   };
 
- 
-  const deleteNote = (id) => {
-    setNotes(notes.filter((n) => n.id !== id));
+  const editNote = (n) => {
+    setTitle(n.title);
+    setNote(n.note);
+    setEditId(n.id);
+  };
+
+  const deleteNote = async (id) => {
+    const { error } = await supabase.from("notes").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting:", error.message);
+    } else {
+      fetchNotes();
+    }
   };
 
   return (
@@ -79,6 +86,7 @@ export default function Note() {
         />
         <div className="pb-3">
           <button
+            type="button"
             className="border rounded w-32 bg-black text-white"
             onClick={addNote}
           >
@@ -87,6 +95,7 @@ export default function Note() {
 
           {editId && (
             <button
+              type="button"
               className="border rounded w-32 bg-black text-white"
               onClick={() => {
                 setEditId(null);
