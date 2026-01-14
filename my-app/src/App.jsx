@@ -1,5 +1,5 @@
 import Note from "./note.jsx";
-import Auth from "./auth.jsx";
+import { Auth } from "./auth.jsx";
 
 import "./App.css";
 
