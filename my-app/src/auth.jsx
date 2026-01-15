@@ -15,7 +15,7 @@ export const Auth = () => {
         password,
       });
       if (signUpError) {
-        console.error("Error signing up:", signUpError.mesage);
+        console.error("Error signing up:", signUpError.message);
         return;
       }
     } else {
@@ -24,7 +24,7 @@ export const Auth = () => {
         password,
       });
       if (signInError) {
-        console.error("Error signing in:", signInError.mesage);
+        console.error("Error signing in:", signInError.message);
         return;
       }
     }
@@ -40,7 +40,7 @@ export const Auth = () => {
         className="font-schoolbell flex flex-col items-center"
       >
         <input
-          type="text"
+          type="email"
           placeholder="Email"
           value={email}
           className="border w-80 px-2 my-2"
