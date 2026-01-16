@@ -16,6 +16,17 @@ function App() {
 
   useEffect(() => {
     fetchSession();
+
+    const { data: authListner } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return;
+    () => {
+      authListner.subscription.unsubscribe();
+    };
   }, []);
 
   const logout = async () => {
@@ -32,7 +43,7 @@ function App() {
           >
             Log Out
           </button>
-          <Note />
+          <Note session={session} />
         </>
       ) : (
         <Auth />

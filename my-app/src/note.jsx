@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "./supabase-client";
 
-export default function Note() {
+export default function Note({ session }) {
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState([]);
   const [editId, setEditId] = useState(null);
-
-  useEffect(() => {
-    fetchNotes();
-  }, []);
 
   const fetchNotes = async () => {
     const { data, error } = await supabase
@@ -28,17 +24,22 @@ export default function Note() {
     if (!title || !note) return;
 
     if (editId) {
-      const { error } = await supabase
+      console.log("Updating with:", { title, note, editId });
+      const { data, error } = await supabase
         .from("notes")
         .update({ title, note })
         .eq("id", editId);
+      console.log("Update data:", data);
+      console.log("Update error:", error);
 
       if (error) {
         console.error("Error updating:", error.message);
       }
       setEditId(null);
     } else {
-      const { error } = await supabase.from("notes").insert({ title, note });
+      const { error } = await supabase
+        .from("notes")
+        .insert({ title, note, email: session.user.email });
 
       if (error) {
         console.error("Error adding:", error.message);
@@ -65,6 +66,26 @@ export default function Note() {
       fetchNotes();
     }
   };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase.channel("notes-channel");
+    channel
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notes" },
+        (payload) => {
+          const newNote = payload.new;
+          setNotes((prev) => [...prev, newNote]);
+        }
+      )
+      .subscribe((status) => {
+        console.log("Subscribed: ", status);
+      });
+  }, []);
 
   return (
     <div className="container ">
