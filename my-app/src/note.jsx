@@ -7,6 +7,8 @@ export default function Note({ session }) {
   const [notes, setNotes] = useState([]);
   const [editId, setEditId] = useState(null);
 
+  const [noteImage, setNoteImage] = useState(null);
+
   const fetchNotes = async () => {
     const { data, error } = await supabase
       .from("notes")
@@ -20,16 +22,44 @@ export default function Note({ session }) {
     }
   };
 
+  const uploadImage = async (file) => {
+    const filePath = `${file.name}-${Date.now()}`;
+
+    const { error } = await supabase.storage
+      .from("notes-images")
+      .upload(filePath, file);
+
+    if (error) {
+      console.error("Error uploading image:", error.message);
+      return null;
+    }
+
+    const { data } = await supabase.storage
+      .from("notes-images")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   const addNote = async () => {
     if (!title || !note) return;
 
+    let imageUrl = null;
+    if (noteImage) {
+      imageUrl = await uploadImage(noteImage);
+    }
+
     if (editId) {
       console.log("Updating with:", { title, note, editId });
-      const { data, error } = await supabase
+      const updateDate = { title, note };
+      if (imageUrl) {
+        updateDate.image_url = imageUrl;
+      }
+      const { error } = await supabase
         .from("notes")
-        .update({ title, note })
+        .update(updateDate)
         .eq("id", editId);
-      console.log("Update data:", data);
+
       console.log("Update error:", error);
 
       if (error) {
@@ -37,9 +67,12 @@ export default function Note({ session }) {
       }
       setEditId(null);
     } else {
-      const { error } = await supabase
-        .from("notes")
-        .insert({ title, note, email: session.user.email });
+      const { error } = await supabase.from("notes").insert({
+        title,
+        note,
+        email: session.user.email,
+        image_url: imageUrl,
+      });
 
       if (error) {
         console.error("Error adding:", error.message);
@@ -55,6 +88,7 @@ export default function Note({ session }) {
     setTitle(n.title);
     setNote(n.note);
     setEditId(n.id);
+    setNoteImage(null);
   };
 
   const deleteNote = async (id) => {
@@ -65,6 +99,11 @@ export default function Note({ session }) {
     } else {
       fetchNotes();
     }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0)
+      setNoteImage(e.target.files[0]);
   };
 
   useEffect(() => {
@@ -105,6 +144,19 @@ export default function Note({ session }) {
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
+        <div>
+          <label className="rounded w-32 bg-gray-200 px-4 mr-4">
+            Choose File
+            <input
+              type="file"
+              accept="*/image"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+          <span>{noteImage ? noteImage.name : "No file chosen"}</span>
+        </div>
+
         <div className="pb-3">
           <button
             type="button"
@@ -122,6 +174,7 @@ export default function Note({ session }) {
                 setEditId(null);
                 setTitle("");
                 setNote("");
+                setNoteImage(null);
               }}
             >
               Cancel
@@ -133,11 +186,19 @@ export default function Note({ session }) {
       {notes.map((n) => (
         <div
           key={n.id}
-          className="border h-52 flex flex-col justify-between p-4 font-schoolbell"
+          className="border mix-h-52 mb-4 flex flex-col justify-between p-4 font-schoolbell"
         >
-          <div className="font-bold">{n.title}</div>
-          <div>{n.note}</div>
-          <div className="flex justify-center gap-3">
+          <div className="font-bold text-2xl">{n.title}</div>
+          <div className="my-2">{n.note}</div>
+          {n.image_url && (
+            <img
+              src={n.image_url}
+              className="max-h-40 object-contain my-2"
+              alt="Note image"
+            />
+          )}
+
+          <div className="flex justify-center gap-3 mt-4">
             <button
               className="border w-32 rounded bg-black text-white"
               onClick={() => editNote(n)}
